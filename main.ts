@@ -1,25 +1,24 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
-// The entry: a deadpan one-star review of sleep, the everyday essential.
+// One-star review of batteries (88 characters, limit 160).
 const LINE =
-  "One star. I give sleep eight hours every night and it still wakes me up tired, like I owe it something.";
+  "One star. Batteries are full when nothing needs them and dead the second something does.";
 
 const outDir =
-  process.env.MAKEFUN_OUTPUT_DIR || join(process.cwd(), "output");
+  process.env.MAKEFUN_OUTPUT_DIR ?? join(process.cwd(), "output");
 mkdirSync(outDir, { recursive: true });
-const out = join(outDir, "entry.txt");
-writeFileSync(out, LINE);
+const outPath = join(outDir, "entry.txt");
 
-// Self-check: read back and verify byte-identical, no trailing newline,
-// within the 1-160 character gate, deadpan (no exclamation marks), and the
-// turn lands in the last few words.
-const back = readFileSync(out, "utf8");
-if (back !== LINE) throw new Error("read-back mismatch");
-if (back.length < 1 || back.length > 160)
-  throw new Error("length out of gate range");
-if (back.endsWith("\n")) throw new Error("trailing newline");
-if (back.includes("!")) throw new Error("exclamation mark breaks the deadpan");
-if (!back.endsWith("like I owe it something."))
-  throw new Error("turn not at end");
-console.log(`wrote entry.txt (${back.length} chars)`);
+writeFileSync(outPath, LINE, "utf8");
+
+// Read-back self-check: the file must hold exactly the line we wrote,
+// on one line, with no trailing newline, inside the 160-character gate.
+const back = readFileSync(outPath, "utf8");
+if (back !== LINE) throw new Error("entry.txt mismatch after write");
+if (back.length > 160) throw new Error("entry exceeds 160 characters");
+if (back.endsWith("\n")) throw new Error("entry must not end with a newline");
+if (back.includes("\n")) throw new Error("entry must be a single line");
+if (!back.startsWith("One star.")) throw new Error("entry must open with the rating");
+
+console.log(`entry.txt written: ${back.length} characters`);
